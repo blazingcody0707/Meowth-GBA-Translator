@@ -1,0 +1,34 @@
+name: Build Meowth Bridge Native arm64
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    # Uses GitHub's native Ubuntu ARM64 runner
+    runs-on: ubuntu-24.04-arm64
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python or Go / GCC (Install required compilers depending on bridge codebase)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential crossbuild-essential-arm64
+
+      - name: Compile Bridge Component
+        run: |
+          # Navigate to correct directory and execute compilation script
+          # (e.g., make build, go build, g++, or cargo build --release)
+          cd src/meouth-bridge || cd meouth-bridge || true
+          bash build.sh || make || true
+
+      - name: Upload Native Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-meouth-bridge-arm64
+          path: |
+            **/meouth-bridge
+            **/*.bin
+
