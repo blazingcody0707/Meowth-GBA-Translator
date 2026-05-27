@@ -1,34 +1,40 @@
-name: Build Meowth Bridge Native arm64
+name: Build Meowth Bridge arm64
 
 on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
-  build:
-    # Uses GitHub's native Ubuntu ARM64 runner
-    runs-on: ubuntu-24.04-arm64
+  build-arm64:
+    runs-on: ubuntu-latest
     
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Python or Go / GCC (Install required compilers depending on bridge codebase)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential crossbuild-essential-arm64
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
 
-      - name: Compile Bridge Component
-        run: |
-          # Navigate to correct directory and execute compilation script
-          # (e.g., make build, go build, g++, or cargo build --release)
-          cd src/meouth-bridge || cd meouth-bridge || true
-          bash build.sh || make || true
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Upload Native Binary
+      - name: Build meouth-bridge for arm64
+        run: |
+          # Replace 'meouth-bridge-dir' with the actual relative path to the bridge subfolder if necessary
+          cd src/meouth-bridge || cd meouth-bridge || true 
+          
+          docker buildx build \
+            --platform linux/arm64 \
+            --output type=local,dest=./build-out \
+            --file Dockerfile .
+
+      - name: Upload arm64 Build Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: native-meouth-bridge-arm64
-          path: |
-            **/meouth-bridge
-            **/*.bin
-
+          name: meouth-bridge-arm64
+          path: ./build-out/
